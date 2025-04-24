@@ -1,13 +1,17 @@
 #!/bin/bash
-IMAGE_NAME=$1
-cat <<EOF > pod.yaml
+POD_YAML_PATH=$1
+CONTAINER_NAME=$2
+IMAGE_NAME=$3
+
+cat <<EOF > ${POD_YAML_PATH}
+
 apiVersion: v1
 kind: Pod
 metadata:
-  name: ws-client
+  name: $CONTAINER_NAME
 spec:
   containers:
-  - name: ws-client
+  - name: $CONTAINER_NAME
     image: $IMAGE_NAME
     env:
     - name: SERVER_ADDR
@@ -29,7 +33,7 @@ spec:
     - name: CA_CERT
       value: "/certs/ca.crt"
     - name: PROM_PUSHGATEWAY_URL
-      value: "http://pushgateway:9091"
+      value: "http://localhost:9091"
     volumeMounts:
     - name: certs
       mountPath: /certs

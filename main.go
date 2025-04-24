@@ -31,6 +31,13 @@ const MaxBody = 200
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
+func getEnv(key, fallback string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return fallback
+}
+
 type StatSample struct {
 	LatencyMs float64
 	SentBytes int
@@ -281,16 +288,16 @@ func startClient(clientID int,
 
 func main() {
 	// Read config from ENV
-	numClients, _ := strconv.Atoi(os.Getenv("NUM_CLIENTS"))
-	messagesPerClient, _ := strconv.Atoi(os.Getenv("MESSAGES_PER_CLIENT"))
-	msgRate, _ := strconv.ParseFloat(os.Getenv("MESSAGES_PER_SECOND"), 64)
-	server := os.Getenv("SERVER_ADDR")
-	startPort, _ := strconv.Atoi(os.Getenv("START_PORT"))
-	portCount, _ := strconv.Atoi(os.Getenv("PORT_COUNT"))
-	ca := os.Getenv("CA_CERT")
-	cert := os.Getenv("CLIENT_CERT")
-	key := os.Getenv("CLIENT_KEY")
-	pushURL := os.Getenv("PROM_PUSHGATEWAY_URL")
+	numClients, _ := strconv.Atoi(getEnv("NUM_CLIENTS", "10"))
+	messagesPerClient, _ := strconv.Atoi(getEnv("MESSAGES_PER_CLIENT", "100"))
+	msgRate, _ := strconv.ParseFloat(getEnv("MESSAGES_PER_SECOND", "1"), 64)
+	server := getEnv("SERVER_ADDR", "localhost")
+	startPort, _ := strconv.Atoi(getEnv("START_PORT", "8443"))
+	portCount, _ := strconv.Atoi(getEnv("PORT_COUNT", "1"))
+	ca := getEnv("CA_CERT", "ca.crt")
+	cert := getEnv("CLIENT_CERT", "client.crt")
+	key := getEnv("CLIENT_KEY", "client.key")
+	pushURL := getEnv("PROM_PUSHGATEWAY_URL", "http://localhost:9091")
 
 	// initialize the list of server ports to use
 	ports := make([]int, portCount)
