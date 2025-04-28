@@ -175,7 +175,8 @@ func clientWorker(mtlsDialer websocket.Dialer,
 
 	url := fmt.Sprintf("wss://%s:%d/ws", server, port)
 	log.Println("Client %d: Connection to %s: started", clientID, url)
-	conn, _, err := mtlsDialer.Dial(url, http.Header{"Connection": {"upgrade"}})
+	conn, _, err := mtlsDialer.Dial(url, nil)
+	//conn, _, err := mtlsDialer.Dial(url, http.Header{"Connection": {"upgrade"}})
 	if err != nil {
 		log.Printf("Client %d: Connection failed to %s: %v", clientID, url, err)
 		return
