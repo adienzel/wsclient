@@ -263,9 +263,12 @@ func startClient(clientID int,
 		i++
 		log.Printf("Starting Client %d", clientID)
 		go clientWorker(mtlsDialer, server, port, clientID, messagesPerConn, msgInterval, ch, &cwg)
+		log.Printf("Starting Client %d", clientID)
 		clientID += 1
 	}
 	cwg.Wait()
+	log.Printf("exit Client %d", clientID)
+
 }
 
 func main() {
