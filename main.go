@@ -259,7 +259,7 @@ func startClient(clientID int,
 	var i int
 	i = 0
 	for _, port := range ports {
-		cwg.Add(i)
+		cwg.Add(1)
 		i++
 		log.Printf("Starting Client %d", clientID)
 		go clientWorker(mtlsDialer, server, port, clientID, messagesPerConn, msgInterval, ch, &cwg)
