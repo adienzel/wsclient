@@ -259,6 +259,7 @@ func startClient(clientID int,
 	for _, port := range ports {
 		cwg.Add(i)
 		i++
+		log.Printf("Starting Client %d", clientID)
 		go clientWorker(mtlsDialer, server, port, clientID, messagesPerConn, msgInterval, ch, &cwg)
 		clientID += 1
 	}
@@ -281,6 +282,7 @@ func main() {
 	// initialize the list of server ports to use
 	ports := make([]int, portCount)
 	for i := range ports {
+		log.Println("adding port to %d", i)
 		ports[i] = startPort + i
 	}
 
@@ -299,6 +301,7 @@ func main() {
 
 	for i := 0; i < numClients; i++ {
 		wg.Add(1)
+		log.Printf("Start clients ")
 		go startClient(i*portCount, statsChan, tlsConfig, ports, messagesPerClient, interval, server, &wg)
 	}
 
