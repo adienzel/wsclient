@@ -172,11 +172,13 @@ func clientWorker(mtlsDialer websocket.Dialer,
 	cwg *sync.WaitGroup) {
 	defer cwg.Done()
 	url := fmt.Sprintf("wss://%s:%d/ws", server, port)
+	log.Println("Client %d: Connection to %s: started", clientID, url)
 	conn, _, err := mtlsDialer.Dial(url, http.Header{"Connection": {"upgrade"}})
 	if err != nil {
 		log.Printf("Client %d: Connection failed to %s: %v", clientID, url, err)
 		return
 	}
+	log.Println("Client %d: Connection to %s: after dial", clientID, url)
 	rand.NewSource(time.Now().UnixNano())
 	for i := 0; i < messagesPerConn; i++ {
 		nano := time.Now().UnixNano()
@@ -198,17 +200,22 @@ func clientWorker(mtlsDialer websocket.Dialer,
 		}
 
 		///msg := fmt.Sprintf("client-%d-msg-%d", clientID, i)
+		log.Println("Client %d: Connection to %s: sending msg %s", clientID, url, msg)
 
 		err = conn.WriteMessage(websocket.TextMessage, []byte(msg))
 		if err != nil {
 			log.Printf("Write failed: %v", err)
 			break
 		}
+		log.Println("Client %d: Connection to %s: after send message", clientID, url)
+
 		type_, reply, err := conn.ReadMessage()
 		if err != nil || type_ != websocket.TextMessage {
 			log.Printf("Read failed: %v", err)
 			break
 		}
+		log.Println("Client %d: Connection to %s: message received back %s", clientID, url, reply)
+
 		latency := float64(time.Since(t0).Milliseconds())
 		response, err := stringBufferToResponse(string(reply))
 		if err != nil || type_ != websocket.TextMessage {
@@ -254,34 +261,6 @@ func startClient(clientID int,
 		i++
 		go clientWorker(mtlsDialer, server, port, clientID, messagesPerConn, msgInterval, ch, &cwg)
 		clientID += 1
-		//url := fmt.Sprintf("wss://%s:%d/ws", server, port)
-		//conn, _, err := mtlsDialer.Dial(url, http.Header{"Connection": {"upgrade"}})
-		//if err != nil {
-		//	log.Printf("Client %d: Connection failed to %s: %v", clientID, url, err)
-		//	continue
-		//}
-		//for i := 0; i < messagesPerConn; i++ {
-		//	t0 := time.Now()
-		//	msg := fmt.Sprintf("client-%d-msg-%d", clientID, i)
-		//	err := conn.WriteMessage(websocket.TextMessage, []byte(msg))
-		//	if err != nil {
-		//		log.Printf("Write failed: %v", err)
-		//		break
-		//	}
-		//	type_, reply, err := conn.ReadMessage()
-		//	if err != nil || type_ != websocket.TextMessage {
-		//		log.Printf("Read failed: %v", err)
-		//		break
-		//	}
-		//	latency := float64(time.Since(t0).Milliseconds())
-		//	metrics.Record(latency, len(msg), len(reply))
-		//	time.Sleep(msgInterval)
-		//}
-		//err = conn.Close()
-		//if err != nil {
-		//	log.Printf("Client %d: Connection close failed to %s: %v", clientID, url, err)
-		//	continue
-		//}
 	}
 	cwg.Wait()
 }
