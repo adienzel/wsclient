@@ -282,7 +282,7 @@ func main() {
 	// initialize the list of server ports to use
 	ports := make([]int, portCount)
 	for i := range ports {
-		log.Println("adding port to %d", i)
+		log.Println("adding port to {}", i)
 		ports[i] = startPort + i
 	}
 
