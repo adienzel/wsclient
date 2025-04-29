@@ -4,7 +4,6 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"crypto/tls"
 	"fmt"
 	"log"
 	"math"
@@ -185,9 +184,10 @@ func clientWorker(mtlsDialer websocket.Dialer,
 	defer cwg.Done()
 
 	//url := fmt.Sprintf("wss://%s:%d/ws/%d", server, port, clientID)
-	url := fmt.Sprintf("wss://localhost:8020/ws")
+	url := fmt.Sprintf("ws://localhost:8020/ws")
 	log.Println("Client %d: Connection to %s: started", clientID, url)
-	conn, _, err := mtlsDialer.Dial(url, nil)
+	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
+	//conn, _, err := mtlsDialer.Dial(url, nil)
 	//conn, _, err := mtlsDialer.Dial(url, http.Header{"Connection": {"upgrade"}})
 	if err != nil {
 		log.Printf("Client %d: Connection failed to %s: %v", clientID, url, err)
@@ -257,7 +257,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 
 func startClient(clientID int,
 	ch chan StatSample,
-	tlsConfig *tls.Config,
+	//tlsConfig *tls.Config,
 	ports []int,
 	messagesPerConn int,
 	msgInterval time.Duration,
@@ -323,7 +323,7 @@ func main() {
 	for i := 0; i < numClients; i++ {
 		wg.Add(1)
 		log.Printf("Start clients ")
-		go startClient(i*portCount, statsChan, nil, ports, messagesPerClient, interval, server, &wg)
+		go startClient(i*portCount, statsChan, ports, messagesPerClient, interval, server, &wg)
 	}
 
 	go func() { // collects stats for later process
