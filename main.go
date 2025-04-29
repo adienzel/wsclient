@@ -293,7 +293,7 @@ func main() {
 	messagesPerClient, _ := strconv.Atoi(getEnv("MESSAGES_PER_CLIENT", "100"))
 	msgRate, _ := strconv.ParseFloat(getEnv("MESSAGES_PER_SECOND", "1"), 64)
 	server := getEnv("SERVER_ADDR", "localhost")
-	startPort, _ := strconv.Atoi(getEnv("START_PORT", "8443"))
+	startPort, _ := strconv.Atoi(getEnv("START_PORT", "8020"))
 	portCount, _ := strconv.Atoi(getEnv("PORT_COUNT", "1"))
 	ca := getEnv("CA_CERT", "ca.crt")
 	cert := getEnv("CLIENT_CERT", "client.crt")
@@ -311,10 +311,10 @@ func main() {
 	interval := time.Duration(float64(time.Second) / msgRate)
 	sampleRate := 5
 
-	tlsConfig, err := loadTLSConfig(cert, key, ca)
-	if err != nil {
-		log.Fatalf("TLS config error: %v", err)
-	}
+	//tlsConfig, err := loadTLSConfig(cert, key, ca)
+	//if err != nil {
+	//	log.Fatalf("TLS config error: %v", err)
+	//}
 
 	metrics := &Metrics{}
 	statsChan := make(chan StatSample, 10000)
