@@ -5,7 +5,6 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"log"
 	"math"
@@ -135,35 +134,35 @@ func (m *Metrics) Stats() (avg, median, stddev, skew, p95, p99 float64) {
 	return
 }
 
-func loadTLSConfig(certFile, keyFile, caFile string) (*tls.Config, error) {
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-	if err != nil {
-		log.Println("error in cert, err := tls.LoadX509KeyPair(certFile, keyFile) files %s %s", certFile, keyFile)
-		return nil, err
-	}
-	caCert, err := os.ReadFile(caFile)
-	if err != nil {
-		log.Println("error read %s", caFile)
-		return nil, err
-	}
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-	return &tls.Config{
-		Certificates:       []tls.Certificate{cert},
-		RootCAs:            caCertPool,
-		InsecureSkipVerify: true, // for testing only
-		VerifyPeerCertificate: func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
-			for _, chain := range verifiedChains {
-				for _, cert := range chain {
-					log.Println("the server subject is : %s", cert.Subject.String())
-					return nil
-				}
-				return nil
-			}
-			return nil
-		},
-	}, nil
-}
+//func loadTLSConfig(certFile, keyFile, caFile string) (*tls.Config, error) {
+//	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+//	if err != nil {
+//		log.Println("error in cert, err := tls.LoadX509KeyPair(certFile, keyFile) files %s %s", certFile, keyFile)
+//		return nil, err
+//	}
+//	caCert, err := os.ReadFile(caFile)
+//	if err != nil {
+//		log.Println("error read %s", caFile)
+//		return nil, err
+//	}
+//	caCertPool := x509.NewCertPool()
+//	caCertPool.AppendCertsFromPEM(caCert)
+//	return &tls.Config{
+//		Certificates:       []tls.Certificate{cert},
+//		RootCAs:            caCertPool,
+//		InsecureSkipVerify: true, // for testing only
+//		VerifyPeerCertificate: func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+//			for _, chain := range verifiedChains {
+//				for _, cert := range chain {
+//					log.Println("the server subject is : %s", cert.Subject.String())
+//					return nil
+//				}
+//				return nil
+//			}
+//			return nil
+//		},
+//	}, nil
+//}
 
 func generateRandomAlphanumeric(length int) []byte {
 	b := make([]byte, length)
