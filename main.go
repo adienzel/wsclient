@@ -295,9 +295,9 @@ func main() {
 	server := getEnv("SERVER_ADDR", "localhost")
 	startPort, _ := strconv.Atoi(getEnv("START_PORT", "8020"))
 	portCount, _ := strconv.Atoi(getEnv("PORT_COUNT", "1"))
-	ca := getEnv("CA_CERT", "ca.crt")
-	cert := getEnv("CLIENT_CERT", "client.crt")
-	key := getEnv("CLIENT_KEY", "client.key")
+	//ca := getEnv("CA_CERT", "ca.crt")
+	//cert := getEnv("CLIENT_CERT", "client.crt")
+	//key := getEnv("CLIENT_KEY", "client.key")
 	pushURL := getEnv("PROM_PUSHGATEWAY_URL", "http://localhost:9091")
 
 	// initialize the list of server ports to use
@@ -323,7 +323,7 @@ func main() {
 	for i := 0; i < numClients; i++ {
 		wg.Add(1)
 		log.Printf("Start clients ")
-		go startClient(i*portCount, statsChan, tlsConfig, ports, messagesPerClient, interval, server, &wg)
+		go startClient(i*portCount, statsChan, nil, ports, messagesPerClient, interval, server, &wg)
 	}
 
 	go func() { // collects stats for later process
