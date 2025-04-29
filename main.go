@@ -149,7 +149,17 @@ func loadTLSConfig(certFile, keyFile, caFile string) (*tls.Config, error) {
 	return &tls.Config{
 		Certificates:       []tls.Certificate{cert},
 		RootCAs:            caCertPool,
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: true, // for testing only
+		VerifyPeerCertificate: func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+			for _, chain := range verifiedChains {
+				for _, cert := range chain {
+					log.Println("the server subject is : %s", cert.Subject.String())
+					return nil
+				}
+				return nil
+			}
+			return nil
+		},
 	}, nil
 }
 
