@@ -185,7 +185,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 	defer cwg.Done()
 
 	//url := fmt.Sprintf("wss://%s:%d/ws/%d", server, port, clientID)
-	url := fmt.Sprintf("wss://ws")
+	url := fmt.Sprintf("wss://localhost:8020/ws")
 	log.Println("Client %d: Connection to %s: started", clientID, url)
 	conn, _, err := mtlsDialer.Dial(url, nil)
 	//conn, _, err := mtlsDialer.Dial(url, http.Header{"Connection": {"upgrade"}})
