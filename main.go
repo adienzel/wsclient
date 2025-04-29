@@ -265,8 +265,11 @@ func startClient(clientID int,
 	wg *sync.WaitGroup) {
 	defer wg.Done()
 	// build dialer with the MTLS
+	//mtlsDialer := websocket.Dialer{
+	//	TLSClientConfig: tlsConfig,
+	//}
 	mtlsDialer := websocket.Dialer{
-		TLSClientConfig: tlsConfig,
+		//TLSClientConfig: tlsConfig,
 	}
 	var cwg sync.WaitGroup
 	var i int
