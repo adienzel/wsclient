@@ -184,7 +184,8 @@ func clientWorker(mtlsDialer websocket.Dialer,
 	defer cwg.Done()
 
 	//url := fmt.Sprintf("wss://%s:%d/ws/%d", server, port, clientID)
-	url := fmt.Sprintf("ws://localhost:8020/ws/%s", clientID)
+	//url := fmt.Sprintf("ws://localhost:8020/ws/%s", clientID)
+	url := fmt.Sprintf("ws://localhost:8020/ws")
 	log.Println("Client %d: Connection to %s: started", clientID, url)
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 	//conn, _, err := mtlsDialer.Dial(url, nil)
