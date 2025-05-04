@@ -206,7 +206,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 		request.Header.Add("Content-Type", "application/text")
 		request.Header.Add("Content-Length", strconv.Itoa(len(body)))
 		request.Header.Add("X-Client-ID", strconv.FormatInt(int64(clientID), 10))
-		request.Header.Add("X-Star-Time", strconv.FormatInt(nano, 10))
+		request.Header.Add("X-Start-Time", strconv.FormatInt(nano, 10))
 
 		msg, err := requestToStringBuffer(request)
 		if err != nil {
