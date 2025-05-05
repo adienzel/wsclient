@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"math/rand"
@@ -13,6 +14,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -82,6 +84,32 @@ func stringBufferToResponse(respStr string) (*http.Response, error) {
 		return nil, err
 	}
 	return resp, nil
+}
+
+func responseToString(resp *http.Response) (string, error) {
+	var builder strings.Builder
+
+	// Write the status line
+	builder.WriteString(fmt.Sprintf("%s %s\r\n", resp.Proto, resp.Status))
+
+	// Write the headers
+	for key, values := range resp.Header {
+		for _, value := range values {
+			builder.WriteString(fmt.Sprintf("%s: %s\r\n", key, value))
+		}
+	}
+
+	// Write a blank line to separate headers from the body
+	builder.WriteString("\r\n")
+
+	// Write the body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	builder.Write(body)
+
+	return builder.String(), nil
 }
 
 //collect metrix data for processing
@@ -236,7 +264,8 @@ func clientWorker(mtlsDialer websocket.Dialer,
 		if err != nil || type_ != websocket.TextMessage {
 			log.Printf("Failed to convert to http rresponse: %v", err)
 		}
-		log.Println("Client %d: Connection to %s: message received back %s", clientID, url, response)
+		resp, _ := responseToString(response)
+		log.Println("Client %d: Connection to %s: message received back %s", clientID, url, resp)
 
 		bodySize := response.ContentLength
 		if int64(len(reply)) < bodySize {
