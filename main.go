@@ -214,7 +214,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 	//url := fmt.Sprintf("wss://%s:%d/ws/%d", server, port, clientID)
 	//url := fmt.Sprintf("ws://localhost:8020/ws/%s", clientID)
 	url := fmt.Sprintf("ws://localhost:8020/ws/by-id/%d", clientID) //ws/by-id/
-	log.Printf("Client %d: Connection to %s: started", clientID, url)
+	//log.Printf("Client %d: Connection to %s: started", clientID, url)
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 	//conn, _, err := mtlsDialer.Dial(url, nil)
 	//conn, _, err := mtlsDialer.Dial(url, http.Header{"Connection": {"upgrade"}})
@@ -222,7 +222,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 		log.Printf("Client %d: Connection failed to %s: %v", clientID, url, err)
 		return
 	}
-	log.Printf("Client %d: Connection to %s: after dial", clientID, url)
+	//log.Printf("Client %d: Connection to %s: after dial", clientID, url)
 	rand.NewSource(time.Now().UnixNano())
 	for i := 0; i < messagesPerConn; i++ {
 		nano := time.Now().UnixNano()
@@ -287,7 +287,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 
 func startClient(clientID int,
 	ch chan StatSample,
-//tlsConfig *tls.Config,
+	//tlsConfig *tls.Config,
 	ports []int,
 	messagesPerConn int,
 	msgInterval time.Duration,
@@ -307,9 +307,9 @@ func startClient(clientID int,
 	for _, port := range ports {
 		cwg.Add(1)
 		i++
-		log.Printf("Starting Client %d", clientID)
+		//log.Printf("Starting Client %d", clientID)
 		go clientWorker(mtlsDialer, server, port, clientID, messagesPerConn, msgInterval, ch, &cwg)
-		log.Printf("Starting Client %d", clientID)
+		log.Printf("started Client %d", clientID)
 		clientID += 1
 	}
 	cwg.Wait()
