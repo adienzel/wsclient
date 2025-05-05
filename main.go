@@ -164,12 +164,12 @@ func (m *Metrics) Stats() (avg, median, stddev, skew, p95, p99 float64) {
 //func loadTLSConfig(certFile, keyFile, caFile string) (*tls.Config, error) {
 //	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 //	if err != nil {
-//		log.Println("error in cert, err := tls.LoadX509KeyPair(certFile, keyFile) files %s %s", certFile, keyFile)
+//		log.Printf("error in cert, err := tls.LoadX509KeyPair(certFile, keyFile) files %s %s", certFile, keyFile)
 //		return nil, err
 //	}
 //	caCert, err := os.ReadFile(caFile)
 //	if err != nil {
-//		log.Println("error read %s", caFile)
+//		log.Printf("error read %s", caFile)
 //		return nil, err
 //	}
 //	caCertPool := x509.NewCertPool()
@@ -181,7 +181,7 @@ func (m *Metrics) Stats() (avg, median, stddev, skew, p95, p99 float64) {
 //		VerifyPeerCertificate: func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
 //			for _, chain := range verifiedChains {
 //				for _, cert := range chain {
-//					log.Println("the server subject is : %s", cert.Subject.String())
+//					log.Printf("the server subject is : %s", cert.Subject.String())
 //					return nil
 //				}
 //				return nil
@@ -208,7 +208,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 	msgInterval time.Duration,
 	ch chan StatSample,
 	cwg *sync.WaitGroup) {
-	log.Println("Client %d: started", clientID)
+	log.Printf("Client %d: started", clientID)
 	defer cwg.Done()
 
 	//url := fmt.Sprintf("wss://%s:%d/ws/%d", server, port, clientID)
@@ -251,7 +251,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 			log.Printf("Write failed: %v", err)
 			break
 		}
-		log.Println("Client %d: Connection to %s: after send message", clientID, url)
+		log.Printf("Client %d: Connection to %s: after send message", clientID, url)
 
 		type_, reply, err := conn.ReadMessage()
 		if err != nil || type_ != websocket.TextMessage {
@@ -265,7 +265,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 			log.Printf("Failed to convert to http rresponse: %v", err)
 		}
 		resp, _ := responseToString(response)
-		log.Println("Client %d: Connection to %s: message received back %s", clientID, url, resp)
+		log.Printf("Client %d: Connection to %s: message received back %s", clientID, url, resp)
 
 		bodySize := response.ContentLength
 		if int64(len(reply)) < bodySize {
@@ -334,7 +334,7 @@ func main() {
 	// initialize the list of server ports to use
 	ports := make([]int, portCount)
 	for i := range ports {
-		log.Println("adding port to {}", i)
+		log.Printf("adding port to %d", i)
 		ports[i] = startPort + i
 	}
 
