@@ -81,6 +81,7 @@ func stringBufferToResponse(respStr string) (*http.Response, error) {
 	reader := bufio.NewReader(bytes.NewBufferString(respStr))
 	resp, err := http.ReadResponse(reader, nil)
 	if err != nil {
+		log.Printf("stringBufferToResponse error on string recived %s with error = %v", respStr, err)
 		return nil, err
 	}
 	return resp, nil
@@ -261,7 +262,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 		latency := float64(time.Since(t0).Milliseconds())
 		response, err := stringBufferToResponse(string(reply))
 		if err != nil || type_ != websocket.TextMessage {
-			log.Printf("Failed to convert to http rresponse: %v", err)
+			log.Printf("Failed to convert to http response: %v", err)
 		}
 		//resp, _ := responseToString(response)
 		//log.Printf("Client %d: Connection to %s: message received back %s", clientID, url, resp)
