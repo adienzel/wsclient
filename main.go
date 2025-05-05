@@ -243,15 +243,14 @@ func clientWorker(mtlsDialer websocket.Dialer,
 			break
 		}
 
-		///msg := fmt.Sprintf("client-%d-msg-%d", clientID, i)
-		log.Printf("Client %d: Connection to %s: sending msg %s", clientID, url, msg)
+		//log.Printf("Client %d: Connection to %s: sending msg %s", clientID, url, msg)
 
 		err = conn.WriteMessage(websocket.TextMessage, []byte(msg))
 		if err != nil {
 			log.Printf("Write failed: %v", err)
 			break
 		}
-		log.Printf("Client %d: Connection to %s: after send message", clientID, url)
+		//log.Printf("Client %d: Connection to %s: after send message", clientID, url)
 
 		type_, reply, err := conn.ReadMessage()
 		if err != nil || type_ != websocket.TextMessage {
@@ -264,8 +263,8 @@ func clientWorker(mtlsDialer websocket.Dialer,
 		if err != nil || type_ != websocket.TextMessage {
 			log.Printf("Failed to convert to http rresponse: %v", err)
 		}
-		resp, _ := responseToString(response)
-		log.Printf("Client %d: Connection to %s: message received back %s", clientID, url, resp)
+		//resp, _ := responseToString(response)
+		//log.Printf("Client %d: Connection to %s: message received back %s", clientID, url, resp)
 
 		bodySize := response.ContentLength
 		if int64(len(reply)) < bodySize {
@@ -288,7 +287,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 
 func startClient(clientID int,
 	ch chan StatSample,
-	//tlsConfig *tls.Config,
+//tlsConfig *tls.Config,
 	ports []int,
 	messagesPerConn int,
 	msgInterval time.Duration,
