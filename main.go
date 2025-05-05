@@ -230,13 +230,14 @@ func clientWorker(mtlsDialer websocket.Dialer,
 			log.Printf("Read failed: %v", err)
 			break
 		}
-		log.Println("Client %d: Connection to %s: message received back %s", clientID, url, reply)
 
 		latency := float64(time.Since(t0).Milliseconds())
 		response, err := stringBufferToResponse(string(reply))
 		if err != nil || type_ != websocket.TextMessage {
 			log.Printf("Failed to convert to http rresponse: %v", err)
 		}
+		log.Println("Client %d: Connection to %s: message received back %s", clientID, url, response)
+
 		bodySize := response.ContentLength
 		if int64(len(reply)) < bodySize {
 			log.Printf("Srange shouldent happend")
