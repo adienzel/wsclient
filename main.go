@@ -4,6 +4,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -78,6 +79,11 @@ func responseToStringBuffer(resp *http.Response) (string, error) {
 }
 
 func stringBufferToResponse(respStr string) (*http.Response, error) {
+
+	if strings.HasPrefix(respStr, "error") {
+		return nil, errors.New("Got error from server")
+	}
+
 	reader := bufio.NewReader(bytes.NewBufferString(respStr))
 	resp, err := http.ReadResponse(reader, nil)
 	if err != nil {
@@ -263,6 +269,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 		response, err := stringBufferToResponse(string(reply))
 		if err != nil || type_ != websocket.TextMessage {
 			log.Printf("Failed to convert to http response: %v", err)
+			continue
 		}
 		//resp, _ := responseToString(response)
 		//log.Printf("Client %d: Connection to %s: message received back %s", clientID, url, resp)
