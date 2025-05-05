@@ -214,7 +214,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 	//url := fmt.Sprintf("wss://%s:%d/ws/%d", server, port, clientID)
 	//url := fmt.Sprintf("ws://localhost:8020/ws/%s", clientID)
 	url := fmt.Sprintf("ws://localhost:8020/ws/by-id/%d", clientID) //ws/by-id/
-	log.Println("Client %d: Connection to %s: started", clientID, url)
+	log.Printf("Client %d: Connection to %s: started", clientID, url)
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 	//conn, _, err := mtlsDialer.Dial(url, nil)
 	//conn, _, err := mtlsDialer.Dial(url, http.Header{"Connection": {"upgrade"}})
@@ -222,7 +222,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 		log.Printf("Client %d: Connection failed to %s: %v", clientID, url, err)
 		return
 	}
-	log.Println("Client %d: Connection to %s: after dial", clientID, url)
+	log.Printf("Client %d: Connection to %s: after dial", clientID, url)
 	rand.NewSource(time.Now().UnixNano())
 	for i := 0; i < messagesPerConn; i++ {
 		nano := time.Now().UnixNano()
@@ -244,7 +244,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 		}
 
 		///msg := fmt.Sprintf("client-%d-msg-%d", clientID, i)
-		log.Println("Client %d: Connection to %s: sending msg %s", clientID, url, msg)
+		log.Printf("Client %d: Connection to %s: sending msg %s", clientID, url, msg)
 
 		err = conn.WriteMessage(websocket.TextMessage, []byte(msg))
 		if err != nil {
