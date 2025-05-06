@@ -268,7 +268,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 		latency := float64(time.Since(t0).Milliseconds())
 		response, err := stringBufferToResponse(string(reply))
 		if err != nil || type_ != websocket.TextMessage {
-			log.Printf("Failed to convert to http response: %v", err)
+			//log.Printf("Failed to convert to http response: %v", err)
 			continue
 		}
 		//resp, _ := responseToString(response)
