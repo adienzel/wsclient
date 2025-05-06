@@ -284,9 +284,9 @@ func clientWorker(mtlsDialer websocket.Dialer,
 			RecvBytes: len(reply),
 		}
 		//metrics.Record(latency, len(msg), len(reply))
-		log.Printf("Loop took without sleap %v", time.Since(t0).Milliseconds())
+		log.Printf("Loop took without sleap %v, for client {}", time.Since(t0).Milliseconds(), clientID)
 		time.Sleep(msgInterval)
-		log.Printf("Loop took with sleap %v", time.Since(t0).Milliseconds())
+		log.Printf("Loop took with sleap %v, for client {}", time.Since(t0).Milliseconds(), clientID)
 	}
 	err = conn.Close()
 	if err != nil {
