@@ -397,9 +397,9 @@ func receiveMessage(connections []Connection, ch chan StatSample) {
 			return
 		}
 
+		log.Printf("start time %f, end time %f, latency %f", startTime, nano, startTime-nano)
 		latency = append(latency, float64(nano-startTime))
 		//resp, _ := responseToString(response)
-		//log.Printf("Client %d: Connection to %s: message received back %s", clientID, url, resp)
 
 		bodySize := response.ContentLength
 		if int64(len(reply)) < bodySize {
@@ -419,7 +419,7 @@ func receiveMessage(connections []Connection, ch chan StatSample) {
 
 func startClient(clientID int,
 	ch chan StatSample,
-//tlsConfig *tls.Config,
+	//tlsConfig *tls.Config,
 	ports []int,
 	messagesPerConn int,
 	msgInterval time.Duration,
@@ -499,12 +499,12 @@ func main() {
 	//}
 
 	metrics := &Metrics{}
-	statsChan := make(chan StatSample, 10000)
+	statsChan := make(chan StatSample, 100000)
 	var wg sync.WaitGroup
 
 	for i := 0; i < numClients; i++ {
 		wg.Add(1)
-		log.Printf("Start clients ")
+		log.Printf("Start clients %d", i)
 		go startClient(i*portCount, statsChan, ports, messagesPerClient, interval, server, &wg)
 	}
 
