@@ -337,7 +337,7 @@ func sendMessage(connections []Connection, messageNumber int, ch chan StatSample
 	sentSize = 0
 	i := 0
 	for _, conn := range connections {
-		log.Printf("sendMessage %d", i)
+		//log.Printf("sendMessage %d", i)
 		nano := time.Now().UnixNano()
 		//t0 := time.Unix(0, nano)
 
@@ -397,7 +397,7 @@ func receiveMessage(connections []Connection, ch chan StatSample) {
 			return
 		}
 
-		log.Printf("start time %d, end time %d, latency %d", startTime, nano, (startTime-nano)/1000000)
+		log.Printf("start time %d, end time %d, latency %d", startTime, nano, (nano-startTime)/1000000)
 		latency = append(latency, float64(nano-startTime))
 		//resp, _ := responseToString(response)
 
