@@ -330,6 +330,7 @@ func closeConnection(connections []Connection) {
 }
 
 func sendMessage(connections []Connection, messageNumber int, ch chan StatSample) {
+	log.Printf("sendMessage #%")
 	var body []byte // later i may use empty as well
 	body = generateRandomAlphanumeric(rand.Intn((MaxBody - MinBody + 1) + MinBody))
 	method := methods[rand.Intn(3)]
@@ -373,6 +374,7 @@ func sendMessage(connections []Connection, messageNumber int, ch chan StatSample
 
 func receiveMessage(connections []Connection, ch chan StatSample) {
 	var latency []float64
+	log.Printf("receiveMessage")
 
 	rcvBytes := 0
 	i := 0
@@ -419,7 +421,7 @@ func receiveMessage(connections []Connection, ch chan StatSample) {
 
 func startClient(clientID int,
 	ch chan StatSample,
-	//tlsConfig *tls.Config,
+//tlsConfig *tls.Config,
 	ports []int,
 	messagesPerConn int,
 	msgInterval time.Duration,
@@ -437,6 +439,8 @@ func startClient(clientID int,
 	var connections []Connection
 	dailer := websocket.DefaultDialer
 	for _, port := range ports {
+		log.Printf("connect client %d on port %d", clientID, port)
+
 		err := createConnection(connections, dailer, port, clientID, "ws://localhost:%d/ws/by-id/%d")
 		if err != nil {
 			log.Printf("Error tring to connect client %d", clientID)
@@ -446,9 +450,17 @@ func startClient(clientID int,
 	}
 
 	for i := 0; i < messagesPerConn; i++ {
+		nano := time.Now().UnixNano()
+		t0 := time.Unix(0, nano)
 		sendMessage(connections, i, ch)
 		receiveMessage(connections, ch)
-		time.Sleep(msgInterval)
+		time.Since(t0).Milliseconds()
+		interval := time.Since(t0)
+		if (msgInterval - interval) < 0 {
+			time.Sleep(msgInterval)
+		} else {
+			time.Sleep(msgInterval - interval)
+		}
 	}
 
 	closeConnection(connections)
@@ -465,7 +477,7 @@ func startClient(clientID int,
 	//	clientID += 1
 	//}
 	//cwg.Wait()
-	log.Printf("exit Client %d", clientID)
+	//log.Printf("exit Client %d", clientID)
 
 }
 
@@ -504,7 +516,7 @@ func main() {
 
 	for i := 0; i < numClients; i++ {
 		wg.Add(1)
-		log.Printf("Start clients %d", i)
+		log.Printf("Start clients %d", i*portCount)
 		go startClient(i*portCount, statsChan, ports, messagesPerClient, interval, server, &wg)
 	}
 
