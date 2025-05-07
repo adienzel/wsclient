@@ -419,7 +419,7 @@ func receiveMessage(connections []Connection, ch chan StatSample) {
 
 func startClient(clientID int,
 	ch chan StatSample,
-//tlsConfig *tls.Config,
+	//tlsConfig *tls.Config,
 	ports []int,
 	messagesPerConn int,
 	msgInterval time.Duration,
@@ -542,7 +542,7 @@ func main() {
 	go func() {
 		tick := time.NewTicker(time.Duration(sampleRate) * time.Second)
 		for range tick.C {
-			log.Printf("recived %d", len(metrics.Latency))
+			log.Printf("Stats recived %d", len(metrics.Latency))
 			rcvMsgCount := atomic.SwapInt64(&metrics.MessageIn, 0)
 			sndMsgCount := atomic.SwapInt64(&metrics.MessageOut, 0)
 			sent := atomic.SwapInt64(&metrics.SentBytes, 0)
