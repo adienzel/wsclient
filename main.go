@@ -220,7 +220,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 
 	//url := fmt.Sprintf("wss://%s:%d/ws/%d", server, port, clientID)
 	//url := fmt.Sprintf("ws://localhost:8020/ws/%s", clientID)
-	url := fmt.Sprintf("ws://localhost:8020/ws/by-id/%d", clientID) //ws/by-id/
+	url := fmt.Sprintf("ws://localhost:%d/ws/by-id/%d", port, clientID) //ws/by-id/
 	//log.Printf("Client %d: Connection to %s: started", clientID, url)
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 	//conn, _, err := mtlsDialer.Dial(url, nil)
@@ -295,9 +295,73 @@ func clientWorker(mtlsDialer websocket.Dialer,
 
 }
 
+type Connection struct {
+	Connection *websocket.Conn
+	ClientId   int
+	Url        string
+}
+
+/**
+
+ */
+func createConnection(connections []Connection, dialer *websocket.Dialer, port int, clientID int, baseUrl string) error {
+	var connection Connection
+	var err error
+	connection.Url = fmt.Sprintf(baseUrl, port, clientID)
+	connection.Connection, _, err = dialer.Dial(connection.Url, nil)
+	if err != nil {
+		log.Printf("Client %d: Connection failed to %s: %v", clientID, connection.Url, err)
+		return err
+	}
+	connection.ClientId = clientID
+	connections = append(connections, connection)
+	return nil
+}
+
+func closeConnection(connections []Connection) {
+	for _, conn := range connections {
+		err := conn.Connection.Close()
+		if err != nil {
+			log.Printf("Client %d: Connection close failed to close: %v", conn.ClientId, err)
+		}
+	}
+}
+
+func sendMessage(connections []Connection, messageNumber int) {
+	var body []byte // later i may use empty as well
+	body = generateRandomAlphanumeric(rand.Intn((MaxBody - MinBody + 1) + MinBody))
+	method := methods[rand.Intn(3)]
+
+	for _, conn := range connections {
+		nano := time.Now().UnixNano()
+		//t0 := time.Unix(0, nano)
+
+		request, err := http.NewRequest(method, fmt.Sprintf("/%d/msgNumber/%d", int64(conn.ClientId), messageNumber), bytes.NewBuffer(body))
+		request.Header.Add("Content-Type", "application/text")
+		request.Header.Add("Content-Length", strconv.Itoa(len(body)))
+		request.Header.Add("X-Client-ID", strconv.FormatInt(int64(conn.ClientId), 10))
+		request.Header.Add("X-Start-Time", strconv.FormatInt(nano, 10))
+
+		msg, err := requestToStringBuffer(request)
+		if err != nil {
+			log.Printf("requestToStringBuffer filed to convert %v", err)
+			break
+		}
+
+		log.Printf("Client %d: sending msg %s to %s", conn.ClientId, msg, conn.Url)
+
+		err = conn.Connection.WriteMessage(websocket.TextMessage, []byte(msg))
+		if err != nil {
+			log.Printf("Write failed for client %d error : %v", conn.ClientId, err)
+			//break
+			//todo count failes
+		}
+	}
+}
+
 func startClient(clientID int,
 	ch chan StatSample,
-	//tlsConfig *tls.Config,
+//tlsConfig *tls.Config,
 	ports []int,
 	messagesPerConn int,
 	msgInterval time.Duration,
@@ -311,6 +375,17 @@ func startClient(clientID int,
 	mtlsDialer := websocket.Dialer{
 		//TLSClientConfig: tlsConfig,
 	}
+
+	var connections []Connection
+	dailer := websocket.DefaultDialer
+	for _, port := range ports {
+		err := createConnection(connections, dailer, port, clientID, "ws://localhost:%d/ws/by-id/%d")
+		if err != nil {
+
+		}
+		clientID += 1
+	}
+
 	var cwg sync.WaitGroup
 	var i int
 	i = 0
