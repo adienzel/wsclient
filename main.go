@@ -336,7 +336,6 @@ func sendMessage(connections []Connection, messageNumber int, ch chan StatSample
 	var sentSize int
 	sentSize = 0
 	i := 0
-	log.Printf("receiveMessage connections = %d", len(connections))
 	for _, conn := range connections {
 		log.Printf("sendMessage %d", i)
 		nano := time.Now().UnixNano()
@@ -353,8 +352,6 @@ func sendMessage(connections []Connection, messageNumber int, ch chan StatSample
 			log.Printf("requestToStringBuffer filed to convert %v", err)
 			break
 		}
-
-		log.Printf("Client %d: sending msg %s to %s", conn.ClientId, msg, conn.Url)
 
 		err = conn.Connection.WriteMessage(websocket.TextMessage, []byte(msg))
 		if err != nil {
@@ -378,10 +375,8 @@ func receiveMessage(connections []Connection, ch chan StatSample) {
 
 	rcvBytes := 0
 	i := 0
-	log.Printf("receiveMessage connections = %d", len(connections))
 
 	for _, conn := range connections {
-		log.Printf("receiveMessage %d", i)
 		type_, reply, err := conn.Connection.ReadMessage()
 		nano := time.Now().UnixNano()
 
@@ -402,7 +397,7 @@ func receiveMessage(connections []Connection, ch chan StatSample) {
 			return
 		}
 
-		log.Printf("start time %f, end time %f, latency %f", startTime, nano, startTime-nano)
+		log.Printf("start time %d, end time %d, latency %d", startTime, nano, (startTime-nano)/1000000)
 		latency = append(latency, float64(nano-startTime))
 		//resp, _ := responseToString(response)
 
@@ -452,7 +447,6 @@ func startClient(clientID int,
 		clientID += 1
 
 	}
-	log.Printf("connections created =  %d", len(connections))
 
 	for i := 0; i < messagesPerConn; i++ {
 		nano := time.Now().UnixNano()
