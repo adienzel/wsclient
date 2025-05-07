@@ -419,7 +419,7 @@ func receiveMessage(connections []Connection, ch chan StatSample) {
 
 func startClient(clientID int,
 	ch chan StatSample,
-	//tlsConfig *tls.Config,
+//tlsConfig *tls.Config,
 	ports []int,
 	messagesPerConn int,
 	msgInterval time.Duration,
@@ -521,10 +521,11 @@ func main() {
 
 	go func() { // collects stats for later process
 		for sample := range statsChan {
-			log.Printf("Stats Sample %v", sample)
+			//log.Printf("Stats Sample %v", sample)
 			if len(sample.LatencyMs) != 0 {
 				metrics.mu.Lock()
 				metrics.Latency = append(metrics.Latency, sample.LatencyMs...)
+				log.Printf("recived %d", len(metrics.Latency))
 				metrics.mu.Unlock()
 			}
 			if len(sample.LatencyMs) != 0 { //recived messages
@@ -541,13 +542,13 @@ func main() {
 	go func() {
 		tick := time.NewTicker(time.Duration(sampleRate) * time.Second)
 		for range tick.C {
-
-			avg, median, sdv, skew, p95, p99 := metrics.Stats() // get statistics results
-
+			log.Printf("recived %d", len(metrics.Latency))
 			rcvMsgCount := atomic.SwapInt64(&metrics.MessageIn, 0)
 			sndMsgCount := atomic.SwapInt64(&metrics.MessageOut, 0)
 			sent := atomic.SwapInt64(&metrics.SentBytes, 0)
 			recv := atomic.SwapInt64(&metrics.RecvBytes, 0)
+
+			avg, median, sdv, skew, p95, p99 := metrics.Stats() // get statistics results
 
 			rcvMsgRate := float64(rcvMsgCount) / float64(sampleRate)
 			sndMsgRate := float64(sndMsgCount) / float64(sampleRate)
