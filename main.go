@@ -330,7 +330,6 @@ func closeConnection(connections []Connection) {
 }
 
 func sendMessage(connections []Connection, messageNumber int, ch chan StatSample) {
-	log.Printf("sendMessage #%")
 	var body []byte // later i may use empty as well
 	body = generateRandomAlphanumeric(rand.Intn((MaxBody - MinBody + 1) + MinBody))
 	method := methods[rand.Intn(3)]
@@ -338,6 +337,7 @@ func sendMessage(connections []Connection, messageNumber int, ch chan StatSample
 	sentSize = 0
 	i := 0
 	for _, conn := range connections {
+		log.Printf("sendMessage %d", i)
 		nano := time.Now().UnixNano()
 		//t0 := time.Unix(0, nano)
 
@@ -374,11 +374,11 @@ func sendMessage(connections []Connection, messageNumber int, ch chan StatSample
 
 func receiveMessage(connections []Connection, ch chan StatSample) {
 	var latency []float64
-	log.Printf("receiveMessage")
 
 	rcvBytes := 0
 	i := 0
 	for _, conn := range connections {
+		log.Printf("receiveMessage %d", i)
 		type_, reply, err := conn.Connection.ReadMessage()
 		nano := time.Now().UnixNano()
 
@@ -421,7 +421,7 @@ func receiveMessage(connections []Connection, ch chan StatSample) {
 
 func startClient(clientID int,
 	ch chan StatSample,
-//tlsConfig *tls.Config,
+	//tlsConfig *tls.Config,
 	ports []int,
 	messagesPerConn int,
 	msgInterval time.Duration,
