@@ -444,7 +444,7 @@ func startClient(clientID int,
 	for _, port := range ports {
 		log.Printf("connect client %d on port %d", clientID, port)
 
-		err := createConnection(connections, dailer, port, clientID, "ws://localhost:%d/ws/by-id/%d")
+		err := createConnection(&connections, dailer, port, clientID, "ws://localhost:%d/ws/by-id/%d")
 		if err != nil {
 			log.Printf("Error tring to connect client %d", clientID)
 			panic(err)
