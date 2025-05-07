@@ -336,6 +336,7 @@ func sendMessage(connections []Connection, messageNumber int, ch chan StatSample
 	var sentSize int
 	sentSize = 0
 	i := 0
+	log.Printf("receiveMessage connections = %d", len(connections))
 	for _, conn := range connections {
 		log.Printf("sendMessage %d", i)
 		nano := time.Now().UnixNano()
@@ -377,6 +378,8 @@ func receiveMessage(connections []Connection, ch chan StatSample) {
 
 	rcvBytes := 0
 	i := 0
+	log.Printf("receiveMessage connections = %d", len(connections))
+
 	for _, conn := range connections {
 		log.Printf("receiveMessage %d", i)
 		type_, reply, err := conn.Connection.ReadMessage()
@@ -421,7 +424,7 @@ func receiveMessage(connections []Connection, ch chan StatSample) {
 
 func startClient(clientID int,
 	ch chan StatSample,
-	//tlsConfig *tls.Config,
+//tlsConfig *tls.Config,
 	ports []int,
 	messagesPerConn int,
 	msgInterval time.Duration,
@@ -447,7 +450,9 @@ func startClient(clientID int,
 			panic(err)
 		}
 		clientID += 1
+
 	}
+	log.Printf("connections created =  %d", len(connections))
 
 	for i := 0; i < messagesPerConn; i++ {
 		nano := time.Now().UnixNano()
