@@ -424,7 +424,7 @@ func receiveMessage(connections []Connection, ch chan StatSample) {
 
 func startClient(clientID int,
 	ch chan StatSample,
-//tlsConfig *tls.Config,
+	//tlsConfig *tls.Config,
 	ports []int,
 	messagesPerConn int,
 	msgInterval time.Duration,
@@ -454,7 +454,7 @@ func startClient(clientID int,
 	}
 	log.Printf("connections created =  %d", len(connections))
 
-	time.Sleep(10000)
+	time.Sleep(1000000)
 
 	for i := 0; i < messagesPerConn; i++ {
 		nano := time.Now().UnixNano()
