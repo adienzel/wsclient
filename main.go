@@ -306,7 +306,7 @@ type Connection struct {
 /*
 *
  */
-func createConnection(connections []Connection, dialer *websocket.Dialer, port int, clientID int, baseUrl string) error {
+func createConnection(connections *[]Connection, dialer *websocket.Dialer, port int, clientID int, baseUrl string) error {
 	var connection Connection
 	var err error
 	connection.Url = fmt.Sprintf(baseUrl, port, clientID)
@@ -316,7 +316,7 @@ func createConnection(connections []Connection, dialer *websocket.Dialer, port i
 		return err
 	}
 	connection.ClientId = clientID
-	connections = append(connections, connection)
+	*connections = append(*connections, connection)
 	return nil
 }
 
