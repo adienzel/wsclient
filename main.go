@@ -454,8 +454,6 @@ func startClient(clientID int,
 	}
 	log.Printf("connections created =  %d", len(connections))
 
-	time.Sleep(100000000000)
-
 	for i := 0; i < messagesPerConn; i++ {
 		nano := time.Now().UnixNano()
 		t0 := time.Unix(0, nano)
