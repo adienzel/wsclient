@@ -521,6 +521,7 @@ func main() {
 
 	go func() { // collects stats for later process
 		for sample := range statsChan {
+			log.Printf("Stats Sample %v", sample)
 			if len(sample.LatencyMs) != 0 {
 				metrics.mu.Lock()
 				metrics.Latency = append(metrics.Latency, sample.LatencyMs...)
