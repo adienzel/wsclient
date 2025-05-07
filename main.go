@@ -40,17 +40,19 @@ func getEnv(key, fallback string) string {
 }
 
 type StatSample struct {
-	LatencyMs float64
+	LatencyMs []float64
 	SentBytes int
 	RecvBytes int
+	Messages  int
 }
 
 type Metrics struct {
-	Latency   []float64
-	SentBytes int64
-	RecvBytes int64
-	Messages  int64
-	mu        sync.Mutex
+	Latency    []float64
+	SentBytes  int64
+	RecvBytes  int64
+	MessageIn  int64
+	MessageOut int64
+	mu         sync.Mutex
 }
 
 func requestToStringBuffer(req *http.Request) (string, error) {
@@ -265,7 +267,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 			break
 		}
 
-		latency := float64(time.Since(t0).Milliseconds())
+		//latency := float64(time.Since(t0).Milliseconds())
 		response, err := stringBufferToResponse(string(reply))
 		if err != nil || type_ != websocket.TextMessage {
 			//log.Printf("Failed to convert to http response: %v", err)
@@ -279,7 +281,7 @@ func clientWorker(mtlsDialer websocket.Dialer,
 			log.Printf("Srange shouldent happend")
 		}
 		ch <- StatSample{
-			LatencyMs: latency,
+			//LatencyMs: latency,
 			SentBytes: len(msg),
 			RecvBytes: len(reply),
 		}
@@ -301,8 +303,8 @@ type Connection struct {
 	Url        string
 }
 
-/**
-
+/*
+*
  */
 func createConnection(connections []Connection, dialer *websocket.Dialer, port int, clientID int, baseUrl string) error {
 	var connection Connection
@@ -327,11 +329,13 @@ func closeConnection(connections []Connection) {
 	}
 }
 
-func sendMessage(connections []Connection, messageNumber int) {
+func sendMessage(connections []Connection, messageNumber int, ch chan StatSample) {
 	var body []byte // later i may use empty as well
 	body = generateRandomAlphanumeric(rand.Intn((MaxBody - MinBody + 1) + MinBody))
 	method := methods[rand.Intn(3)]
-
+	var sentSize int
+	sentSize = 0
+	i := 0
 	for _, conn := range connections {
 		nano := time.Now().UnixNano()
 		//t0 := time.Unix(0, nano)
@@ -356,7 +360,61 @@ func sendMessage(connections []Connection, messageNumber int) {
 			//break
 			//todo count failes
 		}
+		i++
+		sentSize += len(msg)
 	}
+	ch <- StatSample{
+		LatencyMs: nil,
+		SentBytes: sentSize,
+		RecvBytes: 0,
+		Messages:  i,
+	}
+}
+
+func receiveMessage(connections []Connection, ch chan StatSample) {
+	var latency []float64
+
+	rcvBytes := 0
+	i := 0
+	for _, conn := range connections {
+		type_, reply, err := conn.Connection.ReadMessage()
+		nano := time.Now().UnixNano()
+
+		if err != nil || type_ != websocket.TextMessage {
+			log.Printf("Read failed: %v", err)
+
+		}
+		response, err := stringBufferToResponse(string(reply))
+		if err != nil || type_ != websocket.TextMessage {
+			//log.Printf("Failed to convert to http response: %v", err)
+			continue
+		}
+
+		timeStr := response.Header.Get("X-Start-Time")
+		startTime, err := strconv.ParseInt(timeStr, 10, 64) // base 10, 64-bit
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		latency = append(latency, float64(nano-startTime))
+		//resp, _ := responseToString(response)
+		//log.Printf("Client %d: Connection to %s: message received back %s", clientID, url, resp)
+
+		bodySize := response.ContentLength
+		if int64(len(reply)) < bodySize {
+			log.Printf("Srange shouldent happend")
+		}
+		rcvBytes += len(reply)
+		i++
+	}
+	ch <- StatSample{
+		LatencyMs: latency,
+		SentBytes: 0,
+		RecvBytes: rcvBytes,
+		Messages:  i,
+	}
+
 }
 
 func startClient(clientID int,
@@ -372,32 +430,41 @@ func startClient(clientID int,
 	//mtlsDialer := websocket.Dialer{
 	//	TLSClientConfig: tlsConfig,
 	//}
-	mtlsDialer := websocket.Dialer{
-		//TLSClientConfig: tlsConfig,
-	}
+	//mtlsDialer := websocket.Dialer{
+	//	//TLSClientConfig: tlsConfig,
+	//}
 
 	var connections []Connection
 	dailer := websocket.DefaultDialer
 	for _, port := range ports {
 		err := createConnection(connections, dailer, port, clientID, "ws://localhost:%d/ws/by-id/%d")
 		if err != nil {
-
+			log.Printf("Error tring to connect client %d", clientID)
+			panic(err)
 		}
 		clientID += 1
 	}
 
-	var cwg sync.WaitGroup
-	var i int
-	i = 0
-	for _, port := range ports {
-		cwg.Add(1)
-		i++
-		//log.Printf("Starting Client %d", clientID)
-		go clientWorker(mtlsDialer, server, port, clientID, messagesPerConn, msgInterval, ch, &cwg)
-		log.Printf("started Client %d", clientID)
-		clientID += 1
+	for i := 0; i < messagesPerConn; i++ {
+		sendMessage(connections, i, ch)
+		receiveMessage(connections, ch)
+		time.Sleep(msgInterval)
 	}
-	cwg.Wait()
+
+	closeConnection(connections)
+
+	//var cwg sync.WaitGroup
+	//var i int
+	//i = 0
+	//for _, port := range ports {
+	//	cwg.Add(1)
+	//	i++
+	//	//log.Printf("Starting Client %d", clientID)
+	//	go clientWorker(mtlsDialer, server, port, clientID, messagesPerConn, msgInterval, ch, &cwg)
+	//	log.Printf("started Client %d", clientID)
+	//	clientID += 1
+	//}
+	//cwg.Wait()
 	log.Printf("exit Client %d", clientID)
 
 }
@@ -443,34 +510,47 @@ func main() {
 
 	go func() { // collects stats for later process
 		for sample := range statsChan {
-			metrics.mu.Lock()
-			metrics.Latency = append(metrics.Latency, sample.LatencyMs)
-			metrics.mu.Unlock()
-			atomic.AddInt64(&metrics.SentBytes, int64(sample.SentBytes))
-			atomic.AddInt64(&metrics.RecvBytes, int64(sample.RecvBytes))
-			atomic.AddInt64(&metrics.Messages, 1)
+			if len(sample.LatencyMs) != 0 {
+				metrics.mu.Lock()
+				metrics.Latency = append(metrics.Latency, sample.LatencyMs...)
+				metrics.mu.Unlock()
+			}
+			if len(sample.LatencyMs) != 0 { //recived messages
+				atomic.AddInt64(&metrics.RecvBytes, int64(sample.RecvBytes))
+				atomic.AddInt64(&metrics.MessageIn, int64(sample.Messages))
+			} else {
+				atomic.AddInt64(&metrics.SentBytes, int64(sample.SentBytes))
+				atomic.AddInt64(&metrics.MessageOut, int64(sample.Messages))
+			}
+
 		}
 	}()
 
 	go func() {
 		tick := time.NewTicker(time.Duration(sampleRate) * time.Second)
 		for range tick.C {
-			msgCount := atomic.SwapInt64(&metrics.Messages, 0)
+
+			avg, median, sdv, skew, p95, p99 := metrics.Stats() // get statistics results
+
+			rcvMsgCount := atomic.SwapInt64(&metrics.MessageIn, 0)
+			sndMsgCount := atomic.SwapInt64(&metrics.MessageOut, 0)
 			sent := atomic.SwapInt64(&metrics.SentBytes, 0)
 			recv := atomic.SwapInt64(&metrics.RecvBytes, 0)
 
-			msgRate := float64(msgCount) / float64(sampleRate)
+			rcvMsgRate := float64(rcvMsgCount) / float64(sampleRate)
+			sndMsgRate := float64(sndMsgCount) / float64(sampleRate)
 			sentRate := float64(sent) / float64(sampleRate)
 			recviveRate := float64(recv) / float64(sampleRate)
-
-			avg, median, sdv, skew, p95, p99 := metrics.Stats() // get statistics results
-			log.Printf("[%ds] rate=%.1fmsg/s sent=%.1fB/s recv=%.1fB/s avg=%.2fms med=%.2fms std=%.2f skew=%.2f p95=%.2fms p99=%.2fms",
-				sampleRate, msgRate, sentRate, recviveRate, avg, median, sdv, skew, p95, p99)
+			log.Printf("[%ds] rcv rate=%.1f/s sent rate=%.1f/s rcv=%.1fK/s snd=%.1fK/s avg=%.2fms med=%.2fms std=%.2f skew=%.2f p95=%.2fms p99=%.2fms",
+				sampleRate, rcvMsgRate, sndMsgRate, recviveRate/1000.0, sentRate/1000.0, avg, median, sdv, skew, p95, p99)
 
 			err := push.New(pushURL, "ws_test").
 				Collector(prometheus.NewGaugeFunc(prometheus.GaugeOpts{
-					Name: "msg_rate_per_second", Help: "Messages per second",
-				}, func() float64 { return msgRate })).
+					Name: "rcv_msg_rate_per_second", Help: "Receive Messages per second",
+				}, func() float64 { return rcvMsgRate })).
+				Collector(prometheus.NewGaugeFunc(prometheus.GaugeOpts{
+					Name: "snt_msg_rate_per_second", Help: "Sent Messages per second",
+				}, func() float64 { return sndMsgRate })).
 				Collector(prometheus.NewGaugeFunc(prometheus.GaugeOpts{
 					Name: "Average_latency_ms", Help: "Average latency in ms",
 				}, func() float64 { return avg })).
@@ -490,11 +570,11 @@ func main() {
 					Name: "latency_p99_ms", Help: "99th percentile latency",
 				}, func() float64 { return p99 })).
 				Collector(prometheus.NewGaugeFunc(prometheus.GaugeOpts{
-					Name: "Bytes sent", Help: "bytes sent from clients per second",
-				}, func() float64 { return sentRate })).
+					Name: "Bytes sent", Help: "KB sent from clients per second",
+				}, func() float64 { return sentRate / 1000 })).
 				Collector(prometheus.NewGaugeFunc(prometheus.GaugeOpts{
-					Name: "Bytes Recived", Help: "bytes recived from clients per second",
-				}, func() float64 { return sentRate })).
+					Name: "Bytes Recived", Help: "KB recived from clients per second",
+				}, func() float64 { return sentRate / 1000 })).
 				Push()
 			if err != nil {
 				log.Printf("Prometheus push failed: %v", err)
